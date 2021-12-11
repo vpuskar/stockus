@@ -1,1 +1,141 @@
+import pandas as pd
+#from pandas_datareader import wb
+#from pandas_datareader import data
+import yfinance as yf
+import matplotlib.pyplot as plt
+import seaborn as sns
+from functools import reduce
+
+desired_width=320
+pd.set_option('display.width', desired_width)
+pd.set_option('display.max_columns',10)
+
+#import market cap data, set year as index and division with 1M
+market_cap=pd.read_csv("C:/Users/vpuskar/Downloads/market_cap_series.csv")
+market_cap=market_cap.set_index('Year')
+market_cap=market_cap.div(1000000)
+
+#inspect market cap data
+#print(market_cap.head())
+
+#retireve data fromyfinance
+aapl = yf.download('AAPL', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+msft =yf.download('MSFT', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+tsla =yf.download('TSLA', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+xom =yf.download('XOM', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+jnj =yf.download('JNJ', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+jpm =yf.download('JPM', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+amzn =yf.download('AMZN', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+fb =yf.download('FB', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+t = yf.download('T', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+goog = yf.download('GOOG', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+sp500 = yf.download('^GSPC', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+gdp = wb.download(indicator='NY.GDP.MKTP.CD', country='US', start=2013, end=2021)
+
+
+#frame data to work with clean df
+aapl.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+aapl.rename(columns = {'Close':'AAPL'}, inplace=True)
+msft.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+msft.rename(columns = {'Close':'MSFT'}, inplace=True)
+tsla.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+tsla.rename(columns = {'Close':'TSLA'}, inplace=True)
+xom.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+xom.rename(columns = {'Close':'XOM'}, inplace=True)
+jnj.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+jnj.rename(columns = {'Close':'JNJ'}, inplace=True)
+jpm.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+jpm.rename(columns = {'Close':'JPM'}, inplace=True)
+amzn.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+amzn.rename(columns = {'Close':'AMZN'}, inplace=True)
+t.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+t.rename(columns = {'Close':'T'}, inplace=True)
+goog.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+goog.rename(columns = {'Close':'GOOG'}, inplace=True)
+fb.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+fb.rename(columns = {'Close':'FB'}, inplace=True)
+sp500.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+sp500.rename(columns = {'Close':'sp500'}, inplace=True)
+
+#merge all stock data in one df
+dataframes = [aapl, msft, tsla, xom, jnj, jpm, amzn, fb, t, goog, sp500]
+
+stocks = reduce(lambda df_left, df_right: pd.merge(df_left, df_right, left_index=True, right_index=True, how='outer'), dataframes)
+
+#inspect stocks
+#print(stocks.head())
+
+#plot stock prices series
+stocks.plot(subplots=True, title='Stocks price')
+plt.show()
+
+#normalize stock prices to be comparable
+
+first_price=stocks.iloc[0]
+normalized=stocks.div(first_price).mul(100)
+
+normalized.plot(title='Stocks_normalized')
+plt.show()
+
+
+#compare stock returns against benchmark sp500
+tickers=['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'FB', 'T', 'GOOG', 'sp500'] 
+diff_benchmark = normalized[tickers].div(normalized['sp500'], axis=0)
+
+#inspect diff_benchmark
+print(diff_benchmark.head())
+
+diff_benchmark.plot(title='sp500 benchmark comparison')
+plt.show()
+
+#resample df to annual level and show returns correlations
+stocks1=stocks.resample('A').last()
+stocks_return=stocks1.pct_change()
+stocks_corr=stocks_return.corr()
+
+#inspect diff_benchmark
+print(stocks_corr.head())
+
+#compute total return from first and the last price from df together with the correlation
+tot_return = stocks.iloc[-1].div(stocks.iloc[0]).sub(1).mul(100)
+df = tot_return.to_frame().reset_index()
+df = df.rename(columns= {0: 'Value'})
+df.rename(columns = {'index':'ticker'}, inplace=True)
+
+#visualise total return
+sns.barplot(x="Value", y="ticker", data=df,
+            label="Total", color="b").set_title("Stock Price Return")
+plt.show()
+
+#visualise correlation
+sns.heatmap(stocks_corr, annot=True).set_title("Stocks_correlation")
+plt.legend([],[], frameon=False)
+plt.show()
+
+#market cap variables
+mcap_start=market_cap.iloc[-1]
+mcap_end=market_cap.iloc[0]
+
+#visualize market cap performance per stock
+mcap=pd.concat([mcap_start,mcap_end], axis=1)
+mcap.plot(kind='barh', title='markect cap')
+plt.show()
+
+#market cap index performance
+mcap_index=market_cap.sum(axis=1)
+mcap_index.plot(title='mcap_index')
+plt.show()
+
+#market cap index total return
+mcap_index_return = ((mcap_index.iloc[0]/mcap_index.iloc[-1])-1)*100
+
+
+#contribion to the index
+total_market_cap = mcap_end.sum()
+weights = mcap_end.div(total_market_cap)
+weights.mul(mcap_index_return).sort_values().plot(kind='barh', title='contribion to the index')
+plt.show()
+
+#print(weights.sort_values())
+
 
