@@ -1,5 +1,5 @@
 import pandas as pd
-#from pandas_datareader import wb
+from pandas_datareader import wb
 #from pandas_datareader import data
 import yfinance as yf
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ market_cap=market_cap.div(1000000)
 #inspect market cap data
 #print(market_cap.head())
 
-#retireve data fromyfinance
+#retireve data from yfinance
 aapl = yf.download('AAPL', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
 msft =yf.download('MSFT', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
 tsla =yf.download('TSLA', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
@@ -83,7 +83,7 @@ tickers=['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'FB', 'T', 'GOOG',
 diff_benchmark = normalized[tickers].div(normalized['sp500'], axis=0)
 
 #inspect diff_benchmark
-print(diff_benchmark.head())
+#print(diff_benchmark.head())
 
 diff_benchmark.plot(title='sp500 benchmark comparison')
 plt.show()
@@ -94,9 +94,9 @@ stocks_return=stocks1.pct_change()
 stocks_corr=stocks_return.corr()
 
 #inspect diff_benchmark
-print(stocks_corr.head())
+#print(stocks_corr.head())
 
-#compute total return from first and the last price from df together with the correlation
+#compute total return from first and the last price from df 
 tot_return = stocks.iloc[-1].div(stocks.iloc[0]).sub(1).mul(100)
 df = tot_return.to_frame().reset_index()
 df = df.rename(columns= {0: 'Value'})
