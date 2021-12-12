@@ -11,7 +11,7 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
 #import market cap data, set year as index and division with 1M
-market_cap=pd.read_csv("C:/Users/vpuskar/Downloads/market_cap_series.csv")
+market_cap=pd.read_csv("C:/your_filepath/market_cap_series.csv")
 market_cap=market_cap.set_index('Year')
 market_cap=market_cap.div(1000000)
 
