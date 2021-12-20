@@ -93,9 +93,17 @@ stocks1=stocks.resample('A').last()
 stocks_return=stocks1.pct_change()
 stocks_corr=stocks_return.corr()
 
+#inspect stocks_corr
+#print(stocks_corr.head())
+
+#visualise correlation
+sns.heatmap(stocks_corr, annot=True).set_title("Stocks_correlation")
+plt.legend([],[], frameon=False)
+plt.show()
+
 
 #mean reversion
-#given that investors may overeact to the stock related news after large jumps or drops price tend to revert to the previoous levels
+#given that investors may overeact to the stock related news after large jumps or drops, price tend to revert to the previoous levels
 #in fact a popular trading strategy is based on mean reversion
 #https://www.investopedia.com/terms/m/meanreversion.asp
 #folliwing we'll test weekly and annual data autocorrelation, negative autocorr means mean reverting, positive autocorr indicates trend
@@ -136,14 +144,9 @@ sp500_acorr_annual=stock_acorr(returns_annual['sp500'])
 #we can notice obvious deviation between weekly and annual data as expected
 
 print(AAPL_acorr,MSFT_acorr, TSLA_acorr,XOM_acorr, JNJ_acorr,JPM_acorr,AMZN_acorr,FB_acorr,T_acorr,GOOG_acorr,sp500_acorr)
-
 print(AAPL_acorr_annual,MSFT_acorr_annual, TSLA_acorr_annual,XOM_acorr_annual, JNJ_acorr_annual,JPM_acorr_annual,AMZN_acorr_annual,FB_acorr_annual,T_acorr_annual,GOOG_acorr_annual,sp500_acorr_annual)
 
 
-
-
-#inspect diff_benchmark
-#print(stocks_corr.head())
 
 #compute total return from first and the last price from df 
 tot_return = stocks.iloc[-1].div(stocks.iloc[0]).sub(1).mul(100)
@@ -156,10 +159,6 @@ sns.barplot(x="Value", y="ticker", data=df,
             label="Total", color="b").set_title("Stock Price Return")
 plt.show()
 
-#visualise correlation
-sns.heatmap(stocks_corr, annot=True).set_title("Stocks_correlation")
-plt.legend([],[], frameon=False)
-plt.show()
 
 #market cap variables
 mcap_start=market_cap.iloc[-1]
