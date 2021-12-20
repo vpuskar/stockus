@@ -93,6 +93,55 @@ stocks1=stocks.resample('A').last()
 stocks_return=stocks1.pct_change()
 stocks_corr=stocks_return.corr()
 
+
+#mean reversion
+#given that investors may overeact to the stock related news after large jumps or drops price tend to revert to the previoous levels
+#in fact a popular trading strategy is based on mean reversion
+#https://www.investopedia.com/terms/m/meanreversion.asp
+#folliwing we'll test weekly and annual data autocorrelation, negative autocorr means mean reverting, positive autocorr indicates trend
+
+stocks_weekly=stocks.resample('W').last()
+returns_weekly = stocks_weekly.pct_change()
+
+#function to calculate autocorrelation
+
+def stock_acorr (var):
+    return var.squeeze().autocorr()
+
+AAPL_acorr=stock_acorr(returns_weekly['AAPL'])
+MSFT_acorr=stock_acorr(returns_weekly['MSFT'])
+TSLA_acorr=stock_acorr(returns_weekly['TSLA'])
+XOM_acorr=stock_acorr(returns_weekly['XOM'])
+JNJ_acorr=stock_acorr(returns_weekly['JNJ'])
+JPM_acorr=stock_acorr(returns_weekly['JPM'])
+AMZN_acorr=stock_acorr(returns_weekly['AMZN'])
+FB_acorr=stock_acorr(returns_weekly['FB'])
+T_acorr=stock_acorr(returns_weekly['T'])
+GOOG_acorr=stock_acorr(returns_weekly['GOOG'])
+sp500_acorr=stock_acorr(returns_weekly['sp500'])
+
+AAPL_acorr_annual=stock_acorr(returns_annual['AAPL'])
+MSFT_acorr_annual=stock_acorr(returns_annual['MSFT'])
+TSLA_acorr_annual=stock_acorr(returns_annual['TSLA'])
+XOM_acorr_annual=stock_acorr(returns_annual['XOM'])
+JNJ_acorr_annual=stock_acorr(returns_annual['JNJ'])
+JPM_acorr_annual=stock_acorr(returns_annual['JPM'])
+AMZN_acorr_annual=stock_acorr(returns_annual['AMZN'])
+FB_acorr_annual=stock_acorr(returns_annual['FB'])
+T_acorr_annual=stock_acorr(returns_annual['T'])
+GOOG_acorr_annual=stock_acorr(returns_annual['GOOG'])
+sp500_acorr_annual=stock_acorr(returns_annual['sp500'])
+
+
+#we can notice obvious deviation between weekly and annual data as expected
+
+print(AAPL_acorr,MSFT_acorr, TSLA_acorr,XOM_acorr, JNJ_acorr,JPM_acorr,AMZN_acorr,FB_acorr,T_acorr,GOOG_acorr,sp500_acorr)
+
+print(AAPL_acorr_annual,MSFT_acorr_annual, TSLA_acorr_annual,XOM_acorr_annual, JNJ_acorr_annual,JPM_acorr_annual,AMZN_acorr_annual,FB_acorr_annual,T_acorr_annual,GOOG_acorr_annual,sp500_acorr_annual)
+
+
+
+
 #inspect diff_benchmark
 #print(stocks_corr.head())
 
