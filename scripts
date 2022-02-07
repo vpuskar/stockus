@@ -24,15 +24,15 @@ start_date='2014-01-01'
 end_date='2021-12-31'
 stocks = pd.DataFrame(columns=tickers_list)
 
-sp500 = yf.download('^GSPC', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-sp500.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-sp500.rename(columns = {'Close':'sp500'}, inplace=True)
-
-
 for ticker in tickers_list:
     stocks[ticker] = yf.download(ticker,
                                start_date,
                                end_date)['Adj Close']
+
+sp500 = yf.download('^GSPC', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+sp500.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
+sp500.rename(columns = {'Close':'sp500'}, inplace=True)
+
 
 stocks['sp500']=sp500
 #inspect stocks
