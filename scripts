@@ -11,7 +11,7 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
 #import market cap data, set year as index and division with 1M
-market_cap=pd.read_csv("C:/your_filepath/market_cap_series.csv")
+market_cap=pd.read_csv("C:/Users/vpuskar/Downloads/market_cap_series.csv")
 market_cap=market_cap.set_index('Year')
 market_cap=market_cap.div(1000000)
 
@@ -19,49 +19,22 @@ market_cap=market_cap.div(1000000)
 #print(market_cap.head())
 
 #retireve data from yfinance
-aapl = yf.download('AAPL', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-msft =yf.download('MSFT', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-tsla =yf.download('TSLA', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-xom =yf.download('XOM', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-jnj =yf.download('JNJ', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-jpm =yf.download('JPM', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-amzn =yf.download('AMZN', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-fb =yf.download('FB', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-t = yf.download('T', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-goog = yf.download('GOOG', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
+tickers_list= ['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'FB', 'T', 'GOOG']
+start_date='2014-01-01'
+end_date='2021-12-31'
+stocks = pd.DataFrame(columns=tickers_list)
+
 sp500 = yf.download('^GSPC', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-gdp = wb.download(indicator='NY.GDP.MKTP.CD', country='US', start=2013, end=2021)
-
-
-#frame data to work with clean df
-aapl.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-aapl.rename(columns = {'Close':'AAPL'}, inplace=True)
-msft.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-msft.rename(columns = {'Close':'MSFT'}, inplace=True)
-tsla.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-tsla.rename(columns = {'Close':'TSLA'}, inplace=True)
-xom.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-xom.rename(columns = {'Close':'XOM'}, inplace=True)
-jnj.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-jnj.rename(columns = {'Close':'JNJ'}, inplace=True)
-jpm.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-jpm.rename(columns = {'Close':'JPM'}, inplace=True)
-amzn.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-amzn.rename(columns = {'Close':'AMZN'}, inplace=True)
-t.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-t.rename(columns = {'Close':'T'}, inplace=True)
-goog.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-goog.rename(columns = {'Close':'GOOG'}, inplace=True)
-fb.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-fb.rename(columns = {'Close':'FB'}, inplace=True)
 sp500.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
 sp500.rename(columns = {'Close':'sp500'}, inplace=True)
 
-#merge all stock data in one df
-dataframes = [aapl, msft, tsla, xom, jnj, jpm, amzn, fb, t, goog, sp500]
 
-stocks = reduce(lambda df_left, df_right: pd.merge(df_left, df_right, left_index=True, right_index=True, how='outer'), dataframes)
+for ticker in tickers_list:
+    stocks[ticker] = yf.download(ticker,
+                               start_date,
+                               end_date)['Adj Close']
 
+stocks['sp500']=sp500
 #inspect stocks
 #print(stocks.head())
 
@@ -79,7 +52,7 @@ plt.show()
 
 
 #compare stock returns against benchmark sp500
-tickers=['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'FB', 'T', 'GOOG', 'sp500'] 
+tickers=['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'FB', 'T', 'GOOG', 'sp500']
 diff_benchmark = normalized[tickers].div(normalized['sp500'], axis=0)
 
 #inspect diff_benchmark
@@ -110,6 +83,8 @@ plt.show()
 
 stocks_weekly=stocks.resample('W').last()
 returns_weekly = stocks_weekly.pct_change()
+stocks_annual=stocks.resample('A').last()
+returns_annual = stocks_annual.pct_change()
 
 #function to calculate autocorrelation
 
@@ -148,7 +123,7 @@ print(AAPL_acorr_annual,MSFT_acorr_annual, TSLA_acorr_annual,XOM_acorr_annual, J
 
 
 
-#compute total return from first and the last price from df 
+#compute total return from first and the last price from df
 tot_return = stocks.iloc[-1].div(stocks.iloc[0]).sub(1).mul(100)
 df = tot_return.to_frame().reset_index()
 df = df.rename(columns= {0: 'Value'})
@@ -185,5 +160,3 @@ weights.mul(mcap_index_return).sort_values().plot(kind='barh', title='contribion
 plt.show()
 
 #print(weights.sort_values())
-
-
