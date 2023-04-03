@@ -6,17 +6,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from functools import reduce
 
-desired_width=320
-pd.set_option('display.width', desired_width)
-pd.set_option('display.max_columns',10)
+pd.set_option('display.width', 320)
+pd.set_option('display.max_columns', 10)
 
 #import market cap data, set year as index and division with 1M
-market_cap=pd.read_csv("C:/Users/vpuskar/Downloads/market_cap_series.csv")
-market_cap=market_cap.set_index('Year')
-market_cap=market_cap.div(1000000)
+
+market_cap = pd.read_csv('https://raw.githubusercontent.com//vpuskar/stockus/main/market_cap_series.csv').set_index('Year').div(1000000)
 
 #inspect market cap data
-#print(market_cap.head())
+print(market_cap.head())
 
 #retireve data from yfinance
 tickers_list= ['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'META', 'T', 'GOOG']
@@ -24,21 +22,14 @@ start_date='2014-01-01'
 end_date='2021-12-31'
 stocks = pd.DataFrame(columns=tickers_list)
 
-print(yf)
+#print(yf)
 
-for ticker in tickers_list:
-    stocks[ticker] = yf.download(ticker,
-                               start_date,
-                               end_date)['Adj Close']
-
-sp500 = yf.download('^GSPC', start='2014-01-01', end='2021-12-31', auto_adjust=True, progress=False)
-sp500.drop(['Open','High','Low','Volume'], axis=1, inplace=True)
-sp500.rename(columns = {'Close':'sp500'}, inplace=True)
-
+stocks = yf.download(tickers_list, start_date, end_date)['Adj Close']
+sp500 = yf.download('^GSPC', start=start_date, end=end_date, auto_adjust=True, progress=False)[['Close']].rename(columns={'Close': 'sp500'})
 
 stocks['sp500']=sp500
 #inspect stocks
-#print(stocks.head())
+print(stocks.head())
 
 #plot stock prices series
 stocks.plot(subplots=True, title='Stocks price')
@@ -93,36 +84,21 @@ returns_annual = stocks_annual.pct_change()
 def stock_acorr (var):
     return var.squeeze().autocorr()
 
-AAPL_acorr=stock_acorr(returns_weekly['AAPL'])
-MSFT_acorr=stock_acorr(returns_weekly['MSFT'])
-TSLA_acorr=stock_acorr(returns_weekly['TSLA'])
-XOM_acorr=stock_acorr(returns_weekly['XOM'])
-JNJ_acorr=stock_acorr(returns_weekly['JNJ'])
-JPM_acorr=stock_acorr(returns_weekly['JPM'])
-AMZN_acorr=stock_acorr(returns_weekly['AMZN'])
-META_acorr=stock_acorr(returns_weekly['META'])
-T_acorr=stock_acorr(returns_weekly['T'])
-GOOG_acorr=stock_acorr(returns_weekly['GOOG'])
-sp500_acorr=stock_acorr(returns_weekly['sp500'])
+stock_names = ['AAPL', 'MSFT', 'TSLA', 'XOM', 'JNJ', 'JPM', 'AMZN', 'META', 'T', 'GOOG', 'sp500']
 
-AAPL_acorr_annual=stock_acorr(returns_annual['AAPL'])
-MSFT_acorr_annual=stock_acorr(returns_annual['MSFT'])
-TSLA_acorr_annual=stock_acorr(returns_annual['TSLA'])
-XOM_acorr_annual=stock_acorr(returns_annual['XOM'])
-JNJ_acorr_annual=stock_acorr(returns_annual['JNJ'])
-JPM_acorr_annual=stock_acorr(returns_annual['JPM'])
-AMZN_acorr_annual=stock_acorr(returns_annual['AMZN'])
-META_acorr_annual=stock_acorr(returns_annual['META'])
-T_acorr_annual=stock_acorr(returns_annual['T'])
-GOOG_acorr_annual=stock_acorr(returns_annual['GOOG'])
-sp500_acorr_annual=stock_acorr(returns_annual['sp500'])
+def calculate_acorr(data, name):
+    return name + '_acorr', stock_acorr(data[name])
 
+weekly_acorrs = {}
+annual_acorrs = {}
+for stock_name in stock_names:
+    weekly_acorrs[stock_name], annual_acorrs[stock_name] = calculate_acorr(returns_weekly, stock_name), calculate_acorr(returns_annual, stock_name)
 
+for name, value in weekly_acorrs.items():
+    print(value)
+for name, value in annual_acorrs.items():
+    print(value)
 #we can notice obvious deviation between weekly and annual data as expected
-
-print(AAPL_acorr,MSFT_acorr, TSLA_acorr,XOM_acorr, JNJ_acorr,JPM_acorr,AMZN_acorr,META_acorr,T_acorr,GOOG_acorr,sp500_acorr)
-print(AAPL_acorr_annual,MSFT_acorr_annual, TSLA_acorr_annual,XOM_acorr_annual, JNJ_acorr_annual,JPM_acorr_annual,AMZN_acorr_annual,META_acorr_annual,T_acorr_annual,GOOG_acorr_annual,sp500_acorr_annual)
-
 
 
 #compute total return from first and the last price from df
